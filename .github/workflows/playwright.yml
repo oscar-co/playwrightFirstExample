@@ -27,8 +27,7 @@ jobs:
     - name: Checkout frontend repo 
       uses: actions/checkout@v4
       with:
-        repository: oscar-co/playwrightFirstExample
-        ref: main
+        repository: oscar-co/appcompras
         path: frontend
         token: ${{ secrets.FRONTEND_REPO_TOKEN }}
 
