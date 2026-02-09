@@ -30,7 +30,8 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'https://ocoprojects.online/appcompras/',
+    baseURL: 'http://localhost:8081',
+    serviceWorkers: 'block', 
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -75,9 +76,11 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  webServer: {
+    command: 'python3 -m http.server 8081 --bind 127.0.0.1',
+    url: 'http://127.0.0.1:8081',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
+    cwd: 'frontend',
+  },
 });
