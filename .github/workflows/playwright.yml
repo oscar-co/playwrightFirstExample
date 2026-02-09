@@ -1,9 +1,9 @@
 name: Playwright Tests + Allure to GH Pages
 on:
   push:
-    branches: [ main ]
+    branches: [ main , master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main , master ]
 
 permissions:
   contents: read           # leer repo
