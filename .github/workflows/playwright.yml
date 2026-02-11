@@ -21,7 +21,12 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: mcr.microsoft.com/playwright:v1.58.0-noble
+      image: ghcr.io/${{ github.repository_owner }}/playwright-java:1.58.0-noble
+      options: --user 0
+
+    env:
+      HOME: /root
+
 
     steps:
       - name: Checkout test repo
