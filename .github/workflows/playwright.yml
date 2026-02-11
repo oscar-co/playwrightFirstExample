@@ -1,79 +1,80 @@
 name: Playwright Tests + Allure to GH Pages
+
 on:
   push:
-    branches: [ main , master ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main , master ]
+    branches: [ main, master ]
 
 permissions:
-  contents: read           # leer repo
-  pages: write             # deploy a Pages
-  id-token: write    
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: "pages"
-  cancel-in-progress: true # evita despliegues simultáneos
-
+  cancel-in-progress: true
 
 jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.0-noble
+
     steps:
+      - name: Checkout test repo
+        uses: actions/checkout@v4
 
-    - name: Checkout test repo
-      uses: actions/checkout@v4
+      - name: Checkout frontend repo
+        uses: actions/checkout@v4
+        with:
+          repository: oscar-co/appcompras
+          path: frontend
+          token: ${{ secrets.FRONTEND_REPO_TOKEN }}
 
-    - name: Checkout frontend repo 
-      uses: actions/checkout@v4
-      with:
-        repository: oscar-co/appcompras
-        path: frontend
-        token: ${{ secrets.FRONTEND_REPO_TOKEN }}
+      - name: Install Java (for Allure)
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends default-jre-headless
+          rm -rf /var/lib/apt/lists/*
 
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
+      - name: Install dependencies (tests repo)
+        run: npm ci
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
 
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      - name: Run Playwright tests
+        run: npx playwright test
 
-    - name: Install frontend dependencies
-      run: npm ci
-      working-directory: frontend
+      - name: Generate Allure HTML report
+        if: always()
+        run: npx allure-commandline generate allure-results --clean -o allure-report
 
-    - name: Run Playwright tests
-      run: npx playwright test
+      - name: Upload Pages artifact (the static site)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: allure-report
 
-    - name: Generate Allure HTML report
-      if: always()
-      run: npx allure-commandline generate allure-results --clean -o allure-report
+      - name: Upload Allure report artifact (for PRs / debugging)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
 
-    - name: Upload Pages artifact (the static site)
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: allure-report
-
-    - name: Upload Allure report artifact (for PRs / debugging)
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: allure-report
-        path: allure-report
-
-
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
-        if-no-files-found: ignore
+      - name: Upload Playwright HTML report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+          if-no-files-found: ignore
 
   deploy:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
