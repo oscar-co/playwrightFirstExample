@@ -28,7 +28,6 @@ jobs:
     env:
       HOME: /root
 
-
     steps:
       - name: Checkout test repo
         uses: actions/checkout@v4
@@ -39,12 +38,6 @@ jobs:
           repository: oscar-co/appcompras
           path: frontend
           token: ${{ secrets.FRONTEND_REPO_TOKEN }}
-
-      - name: Install Java (for Allure)
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends default-jre-headless
-          rm -rf /var/lib/apt/lists/*
 
       - name: Install dependencies (tests repo)
         run: npm ci
